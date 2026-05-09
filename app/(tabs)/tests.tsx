@@ -1,14 +1,10 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
-  Alert, ScrollView, StyleSheet, Text, TextInput,
+  Alert, StyleSheet, Text, TextInput,
   TouchableOpacity, View
 } from 'react-native';
 import { getAllObjects, saveTest } from '../../services/database';
-
-
-
-
 
 type ObjectRow = {
   id: number;
@@ -25,7 +21,6 @@ type Question = {
   choices: string[];
   type: 'write' | 'choice';
 };
-
 
 const langMap: { [key: string]: keyof ObjectRow } = {
   English: 'objectNameEnglish',
@@ -51,7 +46,7 @@ export default function TestsScreen() {
   const [current, setCurrent] = useState(0);
   const [input, setInput] = useState('');
   const [score, setScore] = useState(0);
-  const [answered, setAnswered] = useState<boolean | null>(null); // null=αναμονή, true=σωστό, false=λάθος
+  const [answered, setAnswered] = useState<boolean | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -64,11 +59,8 @@ export default function TestsScreen() {
 
   const startQuiz = () => {
     if (!selectedLang) return;
-
     const allObjects: ObjectRow[] = getAllObjects();
     const col = langMap[selectedLang];
-
-    // Κρατάμε μόνο αντικείμενα που έχουν μετάφραση στη γλώσσα
     const valid = allObjects.filter((o) => o[col]);
 
     if (valid.length < 2) {
@@ -77,21 +69,12 @@ export default function TestsScreen() {
     }
 
     const allTranslations = valid.map((o) => o[col] as string);
-
     const qs: Question[] = valid.map((obj, i) => {
       const correct = obj[col] as string;
-      const isWrite = i % 2 === 0; // Εναλλάξ τύπος ερώτησης
-
-      // Λάθος επιλογές για multiple choice
+      const isWrite = i % 2 === 0;
       const wrongs = shuffle(allTranslations.filter((t) => t !== correct)).slice(0, 3);
       const choices = shuffle([correct, ...wrongs]);
-
-      return {
-        gr: obj.objectNameGr,
-        correct,
-        choices,
-        type: isWrite ? 'write' : 'choice',
-      };
+      return { gr: obj.objectNameGr, correct, choices, type: isWrite ? 'write' : 'choice' };
     });
 
     setQuestions(shuffle(qs));
@@ -108,37 +91,34 @@ export default function TestsScreen() {
     if (isCorrect) setScore((s) => s + 1);
   };
 
-const handleNext = () => {
-  if (current + 1 >= questions.length) {
-    saveTest({
-      lang: selectedLang!,
-      score: score,  // ← απλά score, όχι score + 1
-      total: questions.length,
-    });
-    setPhase('results');
-  } else {
-    setCurrent((c) => c + 1);
-    setAnswered(null);
-    setInput('');
-  }
-};
+  const handleNext = () => {
+    if (current + 1 >= questions.length) {
+      saveTest({ lang: selectedLang!, score, total: questions.length });
+      setPhase('results');
+    } else {
+      setCurrent((c) => c + 1);
+      setAnswered(null);
+      setInput('');
+    }
+  };
 
   // ── ΦΑΣΗ 1: Επιλογή γλώσσας ──
   if (phase === 'select') {
     return (
-      <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.container}>
         <Text style={styles.title}>📝 Τεστ Γνώσεων</Text>
         <Text style={styles.subtitle}>Επίλεξε γλώσσα για το τεστ:</Text>
 
-        <View style={styles.grid}>
+        <View style={styles.langList}>
           {languages.map((lang) => (
             <TouchableOpacity
               key={lang.id}
-              style={[styles.flagCard, selectedLang === lang.id && styles.selectedCard]}
+              style={[styles.langRow, selectedLang === lang.id && styles.selectedRow]}
               onPress={() => setSelectedLang(lang.id)}
             >
               <Text style={styles.flagEmoji}>{lang.flag}</Text>
               <Text style={styles.langName}>{lang.name}</Text>
+              {selectedLang === lang.id && <Text style={styles.checkmark}>✓</Text>}
             </TouchableOpacity>
           ))}
         </View>
@@ -149,10 +129,8 @@ const handleNext = () => {
           disabled={!selectedLang}
         >
           <Text style={styles.startButtonText}>Έναρξη Τεστ →</Text>
-        </TouchableOpacity>  
-
-
-      </ScrollView>
+        </TouchableOpacity>
+      </View>
     );
   }
 
@@ -163,11 +141,16 @@ const handleNext = () => {
 
     return (
       <View style={styles.container}>
-        <Text style={styles.resultEmoji}>{emoji}</Text>
-        <Text style={styles.title}>Αποτελέσματα</Text>
-        <Text style={styles.scoreText}>{score} / {questions.length} σωστά</Text>
-        <Text style={styles.percentText}>{percent}%</Text>
+        {/* Πλαίσιο αποτελεσμάτων */}
+        <View style={styles.resultBox}>
+          <Text style={styles.resultEmoji}>{emoji}</Text>
+          <Text style={styles.title}>Αποτελέσματα</Text>
+          <View style={styles.divider} />
+          <Text style={styles.scoreText}>{score} / {questions.length} σωστά</Text>
+          <Text style={styles.percentText}>{percent}%</Text>
+        </View>
 
+        {/* Κουμπί εξω από πλαίσιο */}
         <TouchableOpacity style={styles.startButton} onPress={() => setPhase('select')}>
           <Text style={styles.startButtonText}>Νέο Τεστ</Text>
         </TouchableOpacity>
@@ -177,26 +160,23 @@ const handleNext = () => {
 
   // ── ΦΑΣΗ 2: Quiz ──
   const q = questions[current];
-  const feedbackColor = answered === null ? '#fff' : answered ? '#d4edda' : '#f8d7da';
+  const feedbackColor = answered === null ? '#1D1D21' : answered ? '#1a3a2a' : '#3a1a1a';
 
   return (
     <View style={[styles.container, { backgroundColor: feedbackColor }]}>
-      {/* Progress */}
       <Text style={styles.progress}>{current + 1} / {questions.length}</Text>
       <View style={styles.progressBar}>
         <View style={[styles.progressFill, { width: `${((current + 1) / questions.length) * 100}%` }]} />
       </View>
 
-      {/* Ερώτηση */}
       <View style={styles.questionBox}>
         <Text style={styles.questionLabel}>Πώς λέγεται στα {selectedLang};</Text>
         <Text style={styles.questionWord}>🇬🇷 {q.gr}</Text>
       </View>
 
-      {/* Multiple Choice */}
       {q.type === 'choice' && (
         <View style={styles.choicesGrid}>
-          {q.choices.map((choice) => {
+          {q.choices.map((choice, index) => {
             let btnStyle = styles.choiceBtn;
             if (answered !== null) {
               if (choice === q.correct) btnStyle = { ...styles.choiceBtn, ...styles.correctBtn };
@@ -204,7 +184,7 @@ const handleNext = () => {
             }
             return (
               <TouchableOpacity
-                key={choice}
+                key={`${choice}-${index}`}
                 style={btnStyle}
                 onPress={() => answered === null && handleAnswer(choice)}
                 disabled={answered !== null}
@@ -216,7 +196,6 @@ const handleNext = () => {
         </View>
       )}
 
-      {/* Write Answer */}
       {q.type === 'write' && (
         <View style={styles.writeContainer}>
           <TextInput
@@ -224,6 +203,7 @@ const handleNext = () => {
             value={input}
             onChangeText={setInput}
             placeholder={`Γράψε στα ${selectedLang}...`}
+            placeholderTextColor="#888"
             editable={answered === null}
             autoCapitalize="none"
           />
@@ -235,7 +215,6 @@ const handleNext = () => {
         </View>
       )}
 
-      {/* Feedback */}
       {answered !== null && (
         <View style={styles.feedback}>
           <Text style={styles.feedbackText}>
@@ -253,37 +232,40 @@ const handleNext = () => {
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1D1D21', padding: 20 },
-  title: { fontSize: 26, fontWeight: 'bold', color: '#333', marginBottom: 8, textAlign: 'center' },
-  subtitle: { fontSize: 16, color: '#888', marginBottom: 25, textAlign: 'center' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginBottom: 20 },
-  flagCard: { width: 140, height: 140, backgroundColor: '#f8f9fa', margin: 10, borderRadius: 20, alignItems: 'center', justifyContent: 'center', elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
-  selectedCard: { backgroundColor: '#d0eaff', borderWidth: 2, borderColor: '#007AFF' },
-  flagEmoji: { fontSize: 50, marginBottom: 10 },
-  langName: { fontSize: 16, fontWeight: '600', color: '#333' },
-  startButton: { marginTop: 10, backgroundColor: '#007AFF', paddingVertical: 15, paddingHorizontal: 60, borderRadius: 12, width: '100%', alignItems: 'center' },
-  disabledButton: { backgroundColor: '#aaa' },
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1D1D21', padding: 20 },
+  title: { fontSize: 26, fontWeight: 'bold', color: '#fff', marginBottom: 8, textAlign: 'center' },
+  subtitle: { fontSize: 16, color: '#aaa', marginBottom: 25, textAlign: 'center' },
+  langList: { width: '100%', marginBottom: 20 },
+  langRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#2e2e33', padding: 18, borderRadius: 14, marginBottom: 12, borderWidth: 1, borderColor: '#3e3e44' },
+  selectedRow: { backgroundColor: '#1a3a5c', borderColor: '#007AFF' },
+  flagEmoji: { fontSize: 32, marginRight: 15 },
+  langName: { fontSize: 18, fontWeight: '600', color: '#fff', flex: 1 },
+  checkmark: { fontSize: 20, color: '#007AFF', fontWeight: 'bold' },
+  startButton: { marginTop: 15, backgroundColor: '#007AFF', paddingVertical: 15, borderRadius: 12, width: '100%', alignItems: 'center' },
+  disabledButton: { backgroundColor: '#444' },
   startButtonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  progress: { fontSize: 14, color: '#888', marginBottom: 8, alignSelf: 'flex-end' },
-  progressBar: { width: '100%', height: 8, backgroundColor: '#e0e0e0', borderRadius: 4, marginBottom: 30 },
+  progress: { fontSize: 14, color: '#aaa', marginBottom: 8, alignSelf: 'flex-end' },
+  progressBar: { width: '100%', height: 8, backgroundColor: '#2e2e33', borderRadius: 4, marginBottom: 30 },
   progressFill: { height: 8, backgroundColor: '#007AFF', borderRadius: 4 },
-  questionBox: { backgroundColor: '#f0f7ff', borderRadius: 16, padding: 20, width: '100%', alignItems: 'center', marginBottom: 25 },
-  questionLabel: { fontSize: 14, color: '#888', marginBottom: 8 },
-  questionWord: { fontSize: 28, fontWeight: 'bold', color: '#333' },
+  questionBox: { backgroundColor: '#2e2e33', borderRadius: 16, padding: 20, width: '100%', alignItems: 'center', marginBottom: 25 },
+  questionLabel: { fontSize: 14, color: '#aaa', marginBottom: 8 },
+  questionWord: { fontSize: 28, fontWeight: 'bold', color: '#fff' },
   choicesGrid: { width: '100%', gap: 10 },
-  choiceBtn: { backgroundColor: '#f8f9fa', padding: 15, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: '#e0e0e0' },
-  correctBtn: { backgroundColor: '#d4edda', borderColor: '#28a745' },
-  wrongBtn: { backgroundColor: '#f8d7da', borderColor: '#dc3545' },
-  choiceText: { fontSize: 18, fontWeight: '600', color: '#333' },
+  choiceBtn: { backgroundColor: '#2e2e33', padding: 15, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: '#3e3e44' },
+  correctBtn: { backgroundColor: '#1a3a2a', borderColor: '#28a745' },
+  wrongBtn: { backgroundColor: '#3a1a1a', borderColor: '#dc3545' },
+  choiceText: { fontSize: 18, fontWeight: '600', color: '#fff' },
   writeContainer: { width: '100%', gap: 10 },
-  input: { backgroundColor: '#f8f9fa', borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 12, padding: 15, fontSize: 18, width: '100%' },
+  input: { backgroundColor: '#2e2e33', borderWidth: 1, borderColor: '#3e3e44', borderRadius: 12, padding: 15, fontSize: 18, width: '100%', color: '#fff' },
   submitBtn: { backgroundColor: '#007AFF', padding: 15, borderRadius: 12, alignItems: 'center' },
   submitBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   feedback: { marginTop: 20, alignItems: 'center', width: '100%', gap: 12 },
-  feedbackText: { fontSize: 18, fontWeight: '600', color: '#333' },
+  feedbackText: { fontSize: 18, fontWeight: '600', color: '#fff' },
   nextBtn: { backgroundColor: '#007AFF', paddingVertical: 12, paddingHorizontal: 40, borderRadius: 12 },
   nextBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  resultEmoji: { fontSize: 70, marginBottom: 15 },
-  scoreText: { fontSize: 28, fontWeight: 'bold', color: '#333', marginTop: 10 },
-  percentText: { fontSize: 48, fontWeight: 'bold', color: '#007AFF', marginVertical: 10 }
+  resultBox: { backgroundColor: '#2e2e33', borderRadius: 20, padding: 30, width: '100%', alignItems: 'center', borderWidth: 1, borderColor: '#3e3e44', marginBottom: 10 },
+  divider: { height: 1, backgroundColor: '#3e3e44', width: '100%', marginVertical: 15 },
+  resultEmoji: { fontSize: 70, marginBottom: 10 },
+  scoreText: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginTop: 5 },
+  percentText: { fontSize: 48, fontWeight: 'bold', color: '#007AFF', marginVertical: 5 },
 });

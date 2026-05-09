@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { initDB } from '../../services/database';
 
 const languages = [
@@ -13,9 +13,15 @@ const languages = [
 export default function HomeScreen() {
   const router = useRouter();
   const [selected, setSelected] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true); // ← νέο state
 
   useEffect(() => {
     initDB();
+    // Splash για 2.5 δευτερόλεπτα
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 2500);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleNext = () => {
@@ -26,20 +32,26 @@ export default function HomeScreen() {
     });
   };
 
-  return (
-    <ScrollView
-      style={styles.scroll}
-      contentContainerStyle={styles.container}
-    >
-      {/* Logo */}
-      <View style={styles.logoContainer}>
-        <Image 
-          source={require('../../assets/images/ttwLogo-removebg-preview.png')} 
-          style={styles.logo} 
+  // ── SPLASH SCREEN ──
+  if (loading) {
+    return (
+      <View style={styles.splashContainer}>
+        <Image
+          source={require('../../assets/images/ttwLogo-removebg-preview.png')}
+          style={styles.splashLogo}
         />
-        {/* Αντικατέστησε με: <Image source={require('../../assets/images/logo.png')} style={styles.logo} /> */}
-        {/*<Text style={styles.logoPlaceholder}>🔍</Text>
-        {<Text style={styles.appName}>AI Scanner</Text>*/}
+      </View>
+    );
+  }
+
+  // ── HOME SCREEN ──
+  return (
+    <View style={styles.container}>
+      <View style={styles.logoContainer}>
+        <Image
+          source={require('../../assets/images/ttwLogo-removebg-preview.png')}
+          style={styles.logo}
+        />
         <Text style={styles.appSubtitle}>Μάθε λέξεις με την κάμερά σου</Text>
       </View>
 
@@ -65,18 +77,16 @@ export default function HomeScreen() {
       >
         <Text style={styles.nextButtonText}>Επόμενο →</Text>
       </TouchableOpacity>
-
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: { flex: 1, backgroundColor: '#1D1D21' },
-  container: { flexGrow: 1, alignItems: 'center', paddingTop: 60, paddingBottom: 40, backgroundColor: '#1D1D21', padding: 20 },
-  logoContainer: { alignItems: 'center', marginBottom: 30 },
-  logoPlaceholder: { fontSize: 100 },
+  splashContainer: { flex: 1, backgroundColor: '#1D1D21', alignItems: 'center', justifyContent: 'center' },
+  splashLogo: { width: 280, height: 280, resizeMode: 'contain' },
+  container: { flex: 1, alignItems: 'center', paddingTop: 60, paddingBottom: 40, backgroundColor: '#1D1D21', padding: 20 },
+  logoContainer: { alignItems: 'center', marginBottom: 20 },
   logo: { width: 200, height: 200, resizeMode: 'contain' },
-  appName: { fontSize: 32, fontWeight: 'bold', color: '#fff', marginTop: 10 },
   appSubtitle: { fontSize: 14, color: '#aaa', marginTop: 5 },
   title: { fontSize: 18, fontWeight: '600', marginBottom: 20, textAlign: 'center', color: '#ccc' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' },
