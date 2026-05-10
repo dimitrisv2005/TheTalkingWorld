@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { initDB } from '../../services/database';
 
 const languages = [
@@ -10,18 +10,30 @@ const languages = [
   { id: 'Spanish', flag: '🇪🇸', name: 'Español' },
 ];
 
+// ← Εκτός component για να μην reset-άρεται
+let hasLoadedOnce = false;
+
 export default function HomeScreen() {
   const router = useRouter();
   const [selected, setSelected] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true); // ← νέο state
+  const [loading, setLoading] = useState(!hasLoadedOnce); // false αν έχει ήδη φορτώσει
+  const { height } = useWindowDimensions();
+
+  const logoSize = height < 700 ? 120 : 160;
+  const cardSize = height < 700 ? 110 : 130;
+  const flagSize = height < 700 ? 36 : 44;
+  const cardMargin = height < 700 ? 6 : 10;
 
   useEffect(() => {
     initDB();
-    // Splash για 2.5 δευτερόλεπτα
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 2500);
-    return () => clearTimeout(timer);
+
+    if (!hasLoadedOnce) {
+      const timer = setTimeout(() => {
+        hasLoadedOnce = true; // ← μαρκάρουμε ότι έχει φορτώσει
+        setLoading(false);
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   const handleNext = () => {
@@ -32,7 +44,6 @@ export default function HomeScreen() {
     });
   };
 
-  // ── SPLASH SCREEN ──
   if (loading) {
     return (
       <View style={styles.splashContainer}>
@@ -44,13 +55,12 @@ export default function HomeScreen() {
     );
   }
 
-  // ── HOME SCREEN ──
   return (
     <View style={styles.container}>
       <View style={styles.logoContainer}>
         <Image
           source={require('../../assets/images/ttwLogo-removebg-preview.png')}
-          style={styles.logo}
+          style={{ width: logoSize, height: logoSize, resizeMode: 'contain' }}
         />
         <Text style={styles.appSubtitle}>Μάθε λέξεις με την κάμερά σου</Text>
       </View>
@@ -61,10 +71,14 @@ export default function HomeScreen() {
         {languages.map((lang) => (
           <TouchableOpacity
             key={lang.id}
-            style={[styles.flagCard, selected === lang.id && styles.selectedCard]}
+            style={[
+              styles.flagCard,
+              { width: cardSize, height: cardSize, margin: cardMargin },
+              selected === lang.id && styles.selectedCard,
+            ]}
             onPress={() => setSelected(lang.id)}
           >
-            <Text style={styles.flagEmoji}>{lang.flag}</Text>
+            <Text style={{ fontSize: flagSize, marginBottom: 6 }}>{lang.flag}</Text>
             <Text style={styles.langName}>{lang.name}</Text>
           </TouchableOpacity>
         ))}
@@ -84,17 +98,15 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   splashContainer: { flex: 1, backgroundColor: '#1D1D21', alignItems: 'center', justifyContent: 'center' },
   splashLogo: { width: 280, height: 280, resizeMode: 'contain' },
-  container: { flex: 1, alignItems: 'center', paddingTop: 60, paddingBottom: 40, backgroundColor: '#1D1D21', padding: 20 },
-  logoContainer: { alignItems: 'center', marginBottom: 20 },
-  logo: { width: 200, height: 200, resizeMode: 'contain' },
-  appSubtitle: { fontSize: 14, color: '#aaa', marginTop: 5 },
-  title: { fontSize: 18, fontWeight: '600', marginBottom: 20, textAlign: 'center', color: '#ccc' },
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1D1D21', paddingHorizontal: 20, paddingVertical: 10 },
+  logoContainer: { alignItems: 'center', marginBottom: 10 },
+  appSubtitle: { fontSize: 13, color: '#aaa', marginTop: 4 },
+  title: { fontSize: 16, fontWeight: '600', marginBottom: 15, textAlign: 'center', color: '#ccc' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' },
-  flagCard: { width: 140, height: 140, backgroundColor: '#2e2e33', margin: 10, borderRadius: 20, alignItems: 'center', justifyContent: 'center', elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4 },
+  flagCard: { backgroundColor: '#2e2e33', borderRadius: 20, alignItems: 'center', justifyContent: 'center', elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4 },
   selectedCard: { backgroundColor: '#1a3a5c', borderWidth: 2, borderColor: '#007AFF' },
-  flagEmoji: { fontSize: 50, marginBottom: 10 },
-  langName: { fontSize: 16, fontWeight: '600', color: '#fff' },
-  nextButton: { marginTop: 30, backgroundColor: '#007AFF', paddingVertical: 15, borderRadius: 12, width: '100%', alignItems: 'center' },
+  langName: { fontSize: 14, fontWeight: '600', color: '#fff' },
+  nextButton: { marginTop: 15, backgroundColor: '#007AFF', paddingVertical: 14, borderRadius: 12, width: '100%', alignItems: 'center' },
   disabledButton: { backgroundColor: '#444' },
-  nextButtonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  nextButtonText: { color: '#fff', fontSize: 17, fontWeight: 'bold' },
 });

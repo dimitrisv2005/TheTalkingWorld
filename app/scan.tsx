@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { saveObject } from '../services/database';
 
-const FLASK_URL = "http://192.168.1.140:5000/scan";
+const FLASK_URL = "http://192.168.1.21:5000/scan";
 
 export default function ScanScreen() {
   const router = useRouter();
