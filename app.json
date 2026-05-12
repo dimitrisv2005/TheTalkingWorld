@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "kazanidis",
-    "slug": "kazanidis",
+    "name": "TheTalkingWorld",
+    "slug": "TheTalkingWorld",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "kazanidis",
+    "scheme": "thetalkingworld",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -19,7 +19,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.divasil.thetalkingworld"
     },
     "web": {
       "output": "static",
@@ -44,6 +45,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "2c487852-577a-4474-ab43-697c84857d5c"
+      }
     }
   }
 }

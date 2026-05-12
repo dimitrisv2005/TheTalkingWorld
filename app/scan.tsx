@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { ActivityIndicator, Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { saveObject } from '../services/database';
 
-const FLASK_URL = "http://192.168.1.21:5000/scan";
+const FLASK_URL = "https://dimisv1-object-translation-api.hf.space/scan"; 
+// Βεβαιώσου ότι αυτή η IP είναι σωστή για το περιβάλλον σου
 
 export default function ScanScreen() {
   const router = useRouter();
