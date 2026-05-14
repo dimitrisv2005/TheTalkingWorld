@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
@@ -51,9 +52,13 @@ export default function TestsScreen() {
   useFocusEffect(
     useCallback(() => {
       setPhase('select');
-      setSelectedLang(null);
       setScore(0);
       setCurrent(0);
+
+    // ← Φόρτωσε την τελευταία γλώσσα
+      AsyncStorage.getItem('lastLanguage').then((lang) => {
+        if (lang) setSelectedLang(lang);
+      });
     }, [])
   );
 

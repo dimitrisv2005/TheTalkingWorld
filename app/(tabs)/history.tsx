@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -29,9 +30,23 @@ export default function HistoryScreen() {
     useCallback(() => {
       const data = getAllObjects();
       setObjects(data);
+
+      // ← Φόρτωσε την τελευταία γλώσσα
+      AsyncStorage.getItem('lastLanguage').then((lang) => {
+        if (lang) {
+          // Μετατροπή από 'English' σε 'objectNameEnglish'
+          const langMap: { [key: string]: string } = {
+            English: 'objectNameEnglish',
+            German: 'objectNameGerman',
+            French: 'objectNameFrench',
+            Spanish: 'objectNameSpanish',
+          };
+          if (langMap[lang]) setActiveLang(langMap[lang]);
+        }
+      });
     }, [])
   );
-
+  
   const filtered = objects.filter((o) => o[activeLang as keyof ObjectRow]);
 
   const renderItem = ({ item }: { item: ObjectRow }) => {

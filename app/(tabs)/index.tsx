@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
@@ -10,13 +11,12 @@ const languages = [
   { id: 'Spanish', flag: '🇪🇸', name: 'Español' },
 ];
 
-// ← Εκτός component για να μην reset-άρεται
 let hasLoadedOnce = false;
 
 export default function HomeScreen() {
   const router = useRouter();
   const [selected, setSelected] = useState<string | null>(null);
-  const [loading, setLoading] = useState(!hasLoadedOnce); // false αν έχει ήδη φορτώσει
+  const [loading, setLoading] = useState(!hasLoadedOnce);
   const { height } = useWindowDimensions();
 
   const logoSize = height < 700 ? 120 : 160;
@@ -27,9 +27,14 @@ export default function HomeScreen() {
   useEffect(() => {
     initDB();
 
+    // ← Φόρτωσε την τελευταία γλώσσα
+    AsyncStorage.getItem('lastLanguage').then((lang) => {
+      if (lang) setSelected(lang);
+    });
+
     if (!hasLoadedOnce) {
       const timer = setTimeout(() => {
-        hasLoadedOnce = true; // ← μαρκάρουμε ότι έχει φορτώσει
+        hasLoadedOnce = true;
         setLoading(false);
       }, 2500);
       return () => clearTimeout(timer);
@@ -38,6 +43,8 @@ export default function HomeScreen() {
 
   const handleNext = () => {
     if (!selected) return;
+    // ← Αποθήκευσε την επιλεγμένη γλώσσα
+    AsyncStorage.setItem('lastLanguage', selected);
     router.push({
       pathname: '/scan' as any,
       params: { targetLang: selected },
