@@ -142,7 +142,7 @@ export default function TestsScreen() {
   // ── ΦΑΣΗ 3: Αποτελέσματα ──
 if (phase === 'results') {
   const percent = Math.round((score / questions.length) * 100);
-  const emoji = percent >= 80 ? '' : percent >= 50 ? '' : '';
+  const emoji = percent >= 80 ? '🎉' : percent >= 50 ? '👍' : '💪';
 
   return (
     <View style={styles.container}>

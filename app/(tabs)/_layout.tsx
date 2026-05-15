@@ -60,6 +60,13 @@ export default function TabLayout() {
         tabBarIcon: ({ color }) => <IconSymbol size={26} name="chart.bar.fill" color={color} />,
       }}
     />
+    <Tabs.Screen
+      name="challenges"
+      options={{
+      title: 'Challenges',
+      tabBarIcon: ({ color }) => <IconSymbol size={26} name="trophy.fill" color={color} />,
+      }}
+    />
     </Tabs>
   );
 }

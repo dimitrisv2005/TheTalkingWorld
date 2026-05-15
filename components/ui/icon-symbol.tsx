@@ -21,6 +21,7 @@ export function IconSymbol({
   if (name === 'doc.text.fill') return <AntDesign name="history" size={size} color={color} style={style} />;
   if (name === 'chart.bar.fill') return <Foundation name="results" size={size} color={color} style={style} />;
   if (name === 'info.fill') return <MaterialIcons name="info" size={size} color={color} style={style} />;
+  if (name === 'trophy.fill') return <MaterialIcons name="emoji-events" size={size} color={color} style={style} />;
 
   // Default fallback
   return <MaterialIcons name="home" size={size} color={color} style={style} />;
