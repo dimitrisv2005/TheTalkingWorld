@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
+import * as Speech from 'expo-speech'; // <-- ΠΡΟΣΘΗΚΗ ΤΟΥ IMPORT
 import { useCallback, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { getAllObjects } from '../../services/database';
@@ -20,7 +21,15 @@ const languages = [
   { id: 'objectNameSpanish', flag: '🇪🇸', name: 'Español' },
 ];
 
-const BG = '#423D3D';
+// <-- ΠΡΟΣΘΗΚΗ ΤΟΥ MAP ΓΙΑ ΤΟΥΣ ΚΩΔΙΚΟΥΣ ΓΛΩΣΣΑΣ
+const langCodeMap: { [key: string]: string } = {
+  objectNameEnglish: 'en-US',
+  objectNameGerman: 'de-DE',
+  objectNameFrench: 'fr-FR',
+  objectNameSpanish: 'es-ES',
+};
+
+
 
 export default function HistoryScreen() {
   const [objects, setObjects] = useState<ObjectRow[]>([]);
@@ -46,6 +55,12 @@ export default function HistoryScreen() {
       });
     }, [])
   );
+
+  // <-- ΠΡΟΣΘΗΚΗ ΤΗΣ ΣΥΝΑΡΤΗΣΗΣ ΟΜΙΛΙΑΣ
+  const speakWord = (text: string) => {
+    const langCode = langCodeMap[activeLang] ?? 'en-US';
+    Speech.speak(text, { language: langCode, pitch: 1.0, rate: 0.9 });
+  };
   
   const filtered = objects.filter((o) => o[activeLang as keyof ObjectRow]);
 
@@ -59,6 +74,12 @@ export default function HistoryScreen() {
           <Text style={styles.grWord}>🇬🇷 {item.objectNameGr}</Text>
           <Text style={styles.arrow}>→</Text>
           <Text style={styles.translation}>{lang?.flag} {translation}</Text>
+          <TouchableOpacity
+            style={styles.speakButton}
+            onPress={() => speakWord(translation)}
+          >
+            <Text style={styles.speakIcon}>🔊</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -124,6 +145,9 @@ const styles = StyleSheet.create({
   card: { backgroundColor: '#2e2e33', borderRadius: 12, padding: 15, marginBottom: 10, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 3 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   grWord: { fontSize: 16, fontWeight: 'bold', color: '#fff', flex: 1 },
-  arrow: { fontSize: 16, color: '#ccc', marginHorizontal: 8 },
-  translation: { fontSize: 16, color: '#7ab8ff', fontWeight: '600', flex: 1, textAlign: 'right' },
+  arrow: { fontSize: 16, color: '#ccc', marginHorizontal: 8 }, translationContainer: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' },
+  translation: { fontSize: 16, color: '#7ab8ff', fontWeight: '600', textAlign: 'right', marginRight: 8 },
+  speakerButton: { padding: 4, backgroundColor: '#3e3e44', borderRadius: 8 },
+  speakerIcon: { fontSize: 16 },speakButton: { backgroundColor: '#1a3a5c', padding: 6, borderRadius: 8, borderWidth: 1, borderColor: '#007AFF', marginLeft: 8 },
+  speakIcon: { fontSize: 14 },
 });
