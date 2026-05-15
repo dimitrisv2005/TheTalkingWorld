@@ -5,7 +5,7 @@ import {
   Alert, StyleSheet, Text, TextInput,
   TouchableOpacity, View
 } from 'react-native';
-import { getAllObjects, saveTest } from '../../services/database';
+import { getAllObjects, getTotalScore, saveTest } from '../../services/database';
 
 type ObjectRow = {
   id: number;
@@ -48,14 +48,13 @@ export default function TestsScreen() {
   const [input, setInput] = useState('');
   const [score, setScore] = useState(0);
   const [answered, setAnswered] = useState<boolean | null>(null);
+  const [totalStats, setTotalStats] = useState({ totalScore: 0, totalTests: 0, totalQuestions: 0 });
 
   useFocusEffect(
     useCallback(() => {
       setPhase('select');
       setScore(0);
       setCurrent(0);
-
-    // ← Φόρτωσε την τελευταία γλώσσα
       AsyncStorage.getItem('lastLanguage').then((lang) => {
         if (lang) setSelectedLang(lang);
       });
@@ -99,6 +98,7 @@ export default function TestsScreen() {
   const handleNext = () => {
     if (current + 1 >= questions.length) {
       saveTest({ lang: selectedLang!, score, total: questions.length });
+      setTotalStats(getTotalScore());
       setPhase('results');
     } else {
       setCurrent((c) => c + 1);
@@ -140,28 +140,28 @@ export default function TestsScreen() {
   }
 
   // ── ΦΑΣΗ 3: Αποτελέσματα ──
-  if (phase === 'results') {
-    const percent = Math.round((score / questions.length) * 100);
-    const emoji = percent >= 80 ? '🎉' : percent >= 50 ? '😊' : '💪';
+if (phase === 'results') {
+  const percent = Math.round((score / questions.length) * 100);
+  const emoji = percent >= 80 ? '' : percent >= 50 ? '' : '';
 
-    return (
-      <View style={styles.container}>
-        {/* Πλαίσιο αποτελεσμάτων */}
-        <View style={styles.resultBox}>
-          <Text style={styles.resultEmoji}>{emoji}</Text>
-          <Text style={styles.title}>Αποτελέσματα</Text>
-          <View style={styles.divider} />
-          <Text style={styles.scoreText}>{score} / {questions.length} σωστά</Text>
-          <Text style={styles.percentText}>{percent}%</Text>
-        </View>
-
-        {/* Κουμπί εξω από πλαίσιο */}
-        <TouchableOpacity style={styles.startButton} onPress={() => setPhase('select')}>
-          <Text style={styles.startButtonText}>Νέο Τεστ</Text>
-        </TouchableOpacity>
+  return (
+    <View style={styles.container}>
+      <View style={styles.resultBox}>
+        <Text style={styles.resultEmoji}>{emoji}</Text>
+        <Text style={styles.title}>Αποτελέσματα</Text>
+        <View style={styles.divider} />
+        <Text style={styles.scoreText}>{score} / {questions.length} σωστά</Text>
+        <Text style={styles.percentText}>{percent}%</Text>
       </View>
-    );
-  }
+
+      <TouchableOpacity style={styles.startButton} onPress={() => setPhase('select')}>
+        <Text style={styles.startButtonText}>Νέο Τεστ</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+
 
   // ── ΦΑΣΗ 2: Quiz ──
   const q = questions[current];
@@ -273,4 +273,7 @@ const styles = StyleSheet.create({
   resultEmoji: { fontSize: 70, marginBottom: 10 },
   scoreText: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginTop: 5 },
   percentText: { fontSize: 48, fontWeight: 'bold', color: '#007AFF', marginVertical: 5 },
+  totalLabel: { fontSize: 14, color: '#aaa', marginTop: 4 },
+  totalScore: { fontSize: 24, fontWeight: 'bold', color: '#fff', marginTop: 4 },
+  totalSub: { fontSize: 13, color: '#888', marginTop: 2 },
 });

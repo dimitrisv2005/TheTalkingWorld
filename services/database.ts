@@ -66,3 +66,20 @@ export const saveTest = ({ lang, score, total }: { lang: string, score: number, 
 export const getAllTests = (): any[] => {
   return db.getAllSync('SELECT * FROM test ORDER BY timestamp DESC');
 };
+
+export const getTotalScore = (): { totalScore: number; totalTests: number; totalQuestions: number } => {
+  const result = db.getAllSync(
+    `SELECT 
+      COUNT(*) as totalTests,
+      SUM(testScore) as totalScore,
+      SUM(testTotal) as totalQuestions
+    FROM test`
+  ) as any[];
+
+  const row = result[0];
+  return {
+    totalTests: row?.totalTests || 0,
+    totalScore: row?.totalScore || 0,
+    totalQuestions: row?.totalQuestions || 0,
+  };
+};
