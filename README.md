@@ -215,7 +215,7 @@ Every scan and every challenge pushes you forward. Collect points and climb the 
 ## Project structure
 
 ```
-kazanidis/
+TheTalkingWorld/
 ├── app/
 │   ├── (tabs)/
 │   │   ├── _layout.tsx      # Bottom tab navigator
@@ -246,8 +246,8 @@ kazanidis/
 ### Installation
 
 ```bash
-git clone https://github.com/dimitrisv2005/kazanidis.git
-cd kazanidis
+git clone https://github.com/dimitrisv2005/kazanidis.git TheTalkingWorld
+cd TheTalkingWorld
 npm install
 npx expo start
 ```
