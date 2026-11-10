@@ -154,7 +154,7 @@ A three-phase flow: **language selection → quiz → results**.
 - A progress bar shows the current question out of the total.
 - Each question asks *«Πώς λέγεται στα X;»* ("How do you say it in X?") and alternates between written answers and 4-option multiple choice (`i % 2 === 0`).
 - Feedback is instant: green for correct, red for wrong. Answers are compared case-insensitively.
-- The results screen shows the score and percentage with an emoji (🎉 / 😊 / 💪). Each test is saved to SQLite.
+- The results screen shows the score and percentage with an emoji (🎉 / 😊 / 💪). Each test is saved to SQLite.  
 
 ### TTW-S06 · Test history
 
