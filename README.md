@@ -33,6 +33,7 @@ Point your phone at any object, and the app recognizes it with Gemini AI, transl
 - [Screens](#screens)
 - [Gamification](#gamification)
 - [Tech stack](#tech-stack)
+- [Backend](#backend)
 - [Project structure](#project-structure)
 - [Getting started](#getting-started)
 - [Team](#team)
@@ -198,7 +199,7 @@ Every scan and every challenge pushes you forward. Collect points and climb the 
 | Layer | Technology |
 | --- | --- |
 | **Frontend** | React Native 0.81 + Expo SDK 54 with **Expo Router** (file-based routing) for iOS & Android |
-| **AI backend** | Python **Flask** + **Google Gemini AI API**, hosted on **Hugging Face Spaces** |
+| **AI backend** | Python **Flask** + **Google Gemini 2.5 Flash** (`google-genai`), hosted on **Hugging Face Spaces**. See [Backend](#backend) |
 | **Local storage** | **SQLite** via `expo-sqlite` (words, tests, points, challenges) + `AsyncStorage` (last-used language) |
 | **Audio** | `expo-speech` for real-time text-to-speech |
 | **Camera** | `expo-image-picker` |
@@ -211,6 +212,92 @@ Every scan and every challenge pushes you forward. Collect points and climb the 
 | `test` | Quiz results per language |
 | `points` | Accumulated points |
 | `challenges` | Challenge status per language |
+
+## Backend
+
+The AI backend is a small **Python Flask** API that uses **Google Gemini** to recognize and translate the object in a photo. It lives in [`backend/`](backend/). It was originally developed in the separate [kazanidisBackend](https://github.com/dimitrisv2005/kazanidisBackend) repository and was merged here with its commit history.
+
+It's deployed on **Hugging Face Spaces** at `https://dimisv1-object-translation-api.hf.space`.
+
+### How it works
+
+```
+React Native app ──POST /scan──► Flask (app.py) ──image + prompt──► Gemini 2.5 Flash
+       ▲                                                                 │
+       └────────────── { "objectGr": "...", "objectTr": "..." } ◄────────┘
+```
+
+1. The app sends the photo as **base64**, together with the target language.
+2. `app.py` builds a Greek prompt asking Gemini to identify the object and return **only** a JSON object containing:
+   - `objectGr`: the object's name in Greek.
+   - `objectTr`: the object's name in the target language.
+3. The image and the prompt go to the **`gemini-2.5-flash`** model with `response_mime_type: "application/json"`, which forces a clean JSON reply.
+4. Gemini's JSON is returned to the app as is.
+
+### API
+
+**`POST /scan`**
+
+Request:
+
+```json
+{
+  "image": "<base64-encoded image>",
+  "target_lang": "English"
+}
+```
+
+`target_lang` is one of `English`, `German`, `French`, or `Spanish`.
+
+Responses:
+
+| Status | Body | When |
+| --- | --- | --- |
+| `200` | `{ "objectGr": "ποντίκι", "objectTr": "mouse" }` | Object recognized |
+| `400` | `{ "error": "No image provided" }` | The `image` field is missing |
+| `500` | `{ "error": "<message>" }` | Gemini or server error |
+
+CORS is enabled with `Flask-CORS`, so the mobile app can call the API directly.
+
+### Configuration
+
+The Gemini API key is read from the `GEMINI_API_KEY` environment variable. Locally, it's loaded from a `.env` file with `python-dotenv`. On Hugging Face, it's set as a Space secret. The `.env` file is listed in `.gitignore` and is **never committed**.
+
+```env
+# backend/.env
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+Get a key from [Google AI Studio](https://aistudio.google.com/apikey).
+
+### Dependencies
+
+| Package | Purpose |
+| --- | --- |
+| `Flask` | Web server and `/scan` route |
+| `Flask-CORS` | Allows requests from the mobile app |
+| `google-genai` | Google Gemini SDK |
+| `Pillow` | Image handling |
+| `python-dotenv` | Loads `GEMINI_API_KEY` from `.env` |
+
+### Running locally
+
+```bash
+cd backend
+python -m venv .venv
+# Windows: .venv\Scripts\activate   |   macOS/Linux: source .venv/bin/activate
+pip install -r requirements.txt
+echo GEMINI_API_KEY=your_key_here > .env
+python app.py            # http://0.0.0.0:5000
+```
+
+The server listens on `0.0.0.0:5000`, so other devices on your network can reach it. In `app/scan.tsx`, set:
+
+```ts
+const FLASK_URL = "http://<your-computer-ip>:5000/scan";
+```
+
+Your phone and your computer must be on the same Wi-Fi network.
 
 ## Project structure
 
@@ -232,6 +319,9 @@ TheTalkingWorld/
 ├── constants/theme.ts
 ├── assets/images/           # App icon & logo
 ├── screenshots/             # README screenshots
+├── backend/                 # Flask + Gemini API (deployed on Hugging Face)
+│   ├── app.py               # POST /scan endpoint
+│   └── requirements.txt
 ├── app.json
 └── eas.json                 # EAS Build config
 ```
@@ -246,7 +336,7 @@ TheTalkingWorld/
 ### Installation
 
 ```bash
-git clone https://github.com/dimitrisv2005/kazanidis.git TheTalkingWorld
+git clone https://github.com/dimitrisv2005/TheTalkingWorld.git
 cd TheTalkingWorld
 npm install
 npx expo start
@@ -254,20 +344,9 @@ npx expo start
 
 Then scan the QR code with Expo Go (Android) or the Camera app (iOS), or press `a` / `i` to open an emulator.
 
-### Backend
+### Running the backend
 
-The app calls an already-deployed translation API:
-
-```
-POST https://dimisv1-object-translation-api.hf.space/scan
-Content-Type: application/json
-
-{ "image": "<base64 jpeg>", "target_lang": "English" }
-
-→ { "objectGr": "ποντίκι", "objectTr": "mouse" }
-```
-
-`target_lang` is one of `English`, `German`, `French`, or `Spanish`. To use your own backend, change `FLASK_URL` in `app/scan.tsx`.
+The app works out of the box with the deployed API. To run your own backend, see [Backend → Running locally](#running-locally).
 
 ### Building an APK
 
