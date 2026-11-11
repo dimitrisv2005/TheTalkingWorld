@@ -14,7 +14,7 @@ Point your phone at any object, and the app recognizes it with Gemini AI, transl
 ![SQLite](https://img.shields.io/badge/SQLite-expo--sqlite-003B57?logo=sqlite&logoColor=white)
 ![Gemini](https://img.shields.io/badge/Google_Gemini-AI-8E75B2?logo=googlegemini&logoColor=white)
 ![Platforms](https://img.shields.io/badge/platform-Android%20%7C%20iOS-lightgrey)
-
+ 
 <img src="screenshots/02-home.jpg" width="200" alt="Home" />&nbsp;
 <img src="screenshots/04-scan-result.jpg" width="200" alt="Scan result" />&nbsp;
 <img src="screenshots/05-history.jpg" width="200" alt="Word history" />&nbsp;
